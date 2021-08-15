@@ -1,7 +1,7 @@
 ### 第二周作业提交
 
 * 任务1在上一级目录的GeekLab项目中
-* 任务6在上一级目录中的demo项目中
+* 任务6在上一级目录中的demo项目中，需要在命令行中运行`java com.example.demo.nio.HttpServer01`开启服务端进程，再测试。
 
 
 
