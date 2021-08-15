@@ -144,7 +144,6 @@
 
        JAVA_OPTS="-agentlib:hprof=cpu=samples,file=cpu.samples.log"
 
-* 
 
 ## JDK内置命令行工具
 
@@ -202,15 +201,13 @@
 
     执行 js 脚本片段: jrunscript -e "print('hello,kk.jvm'+1)"
 
-     执行 js 文件: jrunscript -l js -f /XXX/XXX/test.js
-
-
+    执行 js 文件: jrunscript -l js -f /XXX/XXX/test.js
 
 ## JVM图形化工具
 
 * jconsole
 * jvisualvm
-* visual
+* visualGC
 * jmc
 
 ## GC的背景与一般原理
@@ -290,7 +287,7 @@
 
   * 也就是说，在这些阶段并没有明显的应用线程暂停。但值得注意的是，它仍然和应用线程争抢CPU 时。 默认情况下，CMS 使用的并发线程数等于 CPU 核心数的 1/4
 
-  * 并行： 多个线程去干一件事
+  * 并行：多个线程去干一件事
 
     并发：不仅去干工作A，同时也在做工作B
 
@@ -317,15 +314,62 @@
 * G1 GC （Garbage First）
 
   * G1 GC最主要的设计目标是:将 STW 停顿的时间和分布，变成可预期且可配置的。
+  
   * 首先，堆不再分成年轻代和老年代，而是划分为多个(通常是 2048个)可以存放对象的小块堆区域(smaller heap regions)。 每个小块，可能一会被定义成 Eden 区，一会被指定为 Survivor 区或者Old 区。在逻辑上，所有的 Eden 区和 Survivor 区合起来 就是年轻代，所有的 Old 区拼在一起那就是老年代。
+  
+  * -XX:+UseG1GC -XX:MaxGCPauseMillis=50
+  
+  * 这样划分之后，使得G1不必每次都去收集整个堆空间，而是以增量的方式来进行处理: 每次只处理一部分内存块，称为此次 GC 的回收集(collection set)。每次 GC 暂停都会收集所有年轻代的内存块，但一般只包含部分老年代的内存块。
+  
+    G1 的另一项创新是，在并发阶段估算每个小堆块存活对象的总数。构建回收集的原则是: 垃圾最多的小块会被优先收集。这也是 G1 名称 的由来。
+  
+  * G1GC参数配置
+  
+    * -XX:G1NewSizePercent:初始年轻代占整个 Java Heap 的大小，默认值为 5%;
+    * -XX:G1MaxNewSizePercent:最大年轻代占整个 Java Heap 的大小，默认值为 60%;
+    * -XX:G1HeapRegionSize:设置每个 Region 的大小，单位 MB，需要为 1、2、4、8、16、32 中的某个值，默认是堆内存的 1/2000。如果这个值设置比较大，那么大对象就可以进入 Region 了;
+    * -XX:ConcGCThreads:与 Java 应用一起执行的 GC 线程数量，默认是 Java线程的 1/4，减少这个参数的数值可能会提升并行回收 的效率，提高系统内部吞吐量。如果这个数值过低，参与回收垃圾的线程不足，也会导致并行回收机制耗时加长;
+    * -XX:+InitiatingHeapOccupancyPercent（简称IHOP）: G1内部并行回收循环启动的阈值，默认为 Java Heap的45%。这个可以理解为老年代使用大于等于 45% 的时候，JVM 会启动垃圾回收。这个值非常重要，它决定了在什么时间启动老年代的并行回收;
+    * -XX:G1HeapWastePercent: G1停止回收的最小内存大小，默认是堆大小的 5%。GC 会收集所有的 Region 中的对象，但是如果下降到了 5%，就会停下来不再收集了。就是说，不必每次回收就把所有的垃圾都处理完，可以遗留少量的下次处理，这样也降低了单次消耗的时间;
+    * -XX:+GCTimeRatio: 这个参数就是计算花在 Java 应用线程上和花在 GC线程上的时间比率，默认是9，跟新生代内存的分配比例一致。这个参数主要的目的是让用户可以控制花在应用上的时间，G1的计算公式是 100/(1+GCTimeRatio)。这样如果参数设置为 9，则最多 10% 的时间会花在 GC 工作上面。Parallel GC 的默认值是 99，表示 1% 的时间被用在 GC 上面，这是因为 Parallel GC贯穿整个 GC，而 G1则根据 Region 来进行划分，不需要全局性扫描整个内存堆。
+    * -XX:MaxGCPauseMillis: 预期 G1 每次执行 GC 操作的暂停时间，单位是毫秒，默认值是 200 毫秒，G1会尽量保证控制在这个范围内。
+  
+* 各个GC对比
 
+  ![各个GC对比](pictures/6.png)
 
+* 常用的GC组合
 
+  ![常见GC组合](pictures/7.png)
 
+* GC如何选择
 
-https://gceasy.io/f
+  选择正确的 GC 算法，唯一可行的方式就是去尝试，一般性的指导原则:
 
+  1. 如果系统考虑吞吐优先，CPU 资源都用来最大程度处理业务，用 Parallel GC; 
 
+  2. 如果系统考虑低延迟有限，每次 GC 时间尽量短，用 CMS GC;
+
+  3. 如果系统内存堆较大，同时希望整体来看平均 GC 时间可控，使用 G1 GC。 对于内存大小的考量:
+
+      * 一般 4G 以上，算是比较大，用 G1 的性价比较高。
+
+      * 一般超过 8G，比如 16G-64G 内存，非常推荐使用 G1 GC。
+
+* JDK8 的默认 GC 是什么? JDK9，JDK10，JDK11...等等默认的 GC 是什么?
+
+  【自己找找答案】
+
+* ZGC/Shenandoah GC
+
+  * -XX:+UnlockExperimentalVMOptions -XX:+UseZGC -Xmx16g
+  * XX:+UnlockExperimentalVMOptions - XX:+UseShenandoahGC -Xmx16g
+
+* <big>__脱离场景谈性能都是耍流氓__</big>
+
+  目前绝大部分 Java 应用系统，堆内存并不大比如 2G-4G 以内，而且对 10ms 这种低延迟的 GC 暂停不敏感，也就是说处理一个业务步骤，大概几百毫秒都是可以接受的，GC 暂停 100ms 还是 10ms 没多大区别。另一方面，系统的吞吐量反而往往是我们追求的重点，这时候就需要考虑采用并行 GC。
+
+  如果堆内存再大一些，可以考虑 G1 GC。如果内存非常大(比如超过 16G，甚至是 64G、128G)，或者是对延迟非常敏感 (比如高频量化交易系统)，就可以考虑使用新的GC(ZGC/Shenandoah)。
 
 
 
