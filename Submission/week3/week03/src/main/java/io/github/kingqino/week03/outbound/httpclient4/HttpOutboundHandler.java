@@ -65,7 +65,7 @@ public class HttpOutboundHandler {
     }
 
     private String formatUrl(String backend) {
-        return backend.endsWith("/")?backend.substring(0,backend.length()-1):backend;
+        return backend.endsWith("/") ? backend.substring(0,backend.length()-1) : backend;
     }
 
     public void handle(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx, HttpRequestFilter filter) {
