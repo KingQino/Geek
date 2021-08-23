@@ -5,18 +5,27 @@ import io.github.kingqino.week03.filter.HttpRequestFilter;
 import io.github.kingqino.week03.filter.HttpResponseFilter;
 import io.github.kingqino.week03.router.HttpEndpointRouter;
 import io.github.kingqino.week03.router.TargetHttpEndpointRouter;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
 import okhttp3.Response;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static io.github.kingqino.week03.utils.OkHttpUtils.getCall;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class OkHttpOutboundHandler {
     private CloseableHttpAsyncClient httpclient;
@@ -34,7 +43,7 @@ public class OkHttpOutboundHandler {
         int cores = Runtime.getRuntime().availableProcessors();
         long keepAliveTime = 1000;
         int queueSize = 2048;
-        RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();//.DiscardPolicy();
+        RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
         proxyService = new ThreadPoolExecutor(cores, cores,
                 keepAliveTime, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueSize),
                 new NamedThreadFactory("proxyService"), handler);
@@ -55,7 +64,7 @@ public class OkHttpOutboundHandler {
     }
 
     private String formalUrl(String backend) {
-        return backend.endsWith("/") ? backend.substring(0,backend.length()-1) : backend;
+        return backend.endsWith("/") ? backend.substring(0, backend.length() - 1) : backend;
     }
 
     public void handle(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx, HttpRequestFilter filter) {
@@ -67,9 +76,30 @@ public class OkHttpOutboundHandler {
 
     private void fetchGet(FullHttpRequest fullRequest, ChannelHandlerContext ctx, String url) {
         Response response = getCall(url);
-        ctx.write(response);
+
+        String content = null;
+        try {
+            content = Objects.requireNonNull(response.body()).string();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        assert content != null;
+
+        FullHttpResponse response_answer = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(content.getBytes(StandardCharsets.UTF_8)));
+        response_answer.headers().set("Content-Type", "application/json");
+        response_answer.headers().setInt("Content-Length", Integer.parseInt(String.valueOf(Objects.requireNonNull(response.body()).contentLength())));
+
+        filter.filter(response_answer);
+
+        ctx.write(response_answer);
         ctx.flush();
+        ctx.close();
     }
 
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
 
 }

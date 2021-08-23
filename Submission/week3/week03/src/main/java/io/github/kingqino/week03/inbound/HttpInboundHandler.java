@@ -30,13 +30,14 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 @Log4j2
 public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
     private List<String> proxyServer;
-    private HttpOutboundHandler handler;
-//    private OkHttpOutboundHandler handler;
+//    private HttpOutboundHandler handler;
+    private OkHttpOutboundHandler handler;
     private HttpRequestFilter filter = new HeaderHttpRequestFilter();
 
     public HttpInboundHandler(List<String> proxyServer) {
         this.proxyServer = proxyServer;
-        this.handler = new HttpOutboundHandler(this.proxyServer);
+//        this.handler = new HttpOutboundHandler(this.proxyServer);
+        this.handler = new OkHttpOutboundHandler(this.proxyServer);
     }
 
     @Override

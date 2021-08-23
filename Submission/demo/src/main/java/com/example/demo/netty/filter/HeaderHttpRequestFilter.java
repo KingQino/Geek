@@ -7,6 +7,6 @@ public class HeaderHttpRequestFilter implements HttpRequestFilter {
 
     @Override
     public void filter(FullHttpRequest fullRequest, ChannelHandlerContext ctx) {
-        fullRequest.headers().set("MAuth", "Valar Morghulis");
+        fullRequest.headers().set("mao", "soul");
     }
 }

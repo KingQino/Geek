@@ -71,7 +71,9 @@ public class HttpOutboundHandler {
     public void handle(final FullHttpRequest fullRequest, final ChannelHandlerContext ctx, HttpRequestFilter filter) {
         String backendUrl = router.route(this.backendUrls);
         final String url = backendUrl + fullRequest.uri();
+        System.out.println(ctx);
         filter.filter(fullRequest, ctx);
+        System.out.println(ctx);
         proxyService.submit(()->fetchGet(fullRequest, ctx, url));
     }
 

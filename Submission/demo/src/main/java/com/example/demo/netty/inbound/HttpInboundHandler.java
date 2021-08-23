@@ -44,10 +44,9 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-            //logger.info("channelRead流量接口请求开始，时间为{}", startTime);
             FullHttpRequest fullRequest = (FullHttpRequest) msg;
             String uri = fullRequest.uri();
-//            //logger.info("接收到的请求url为{}", uri);
+
             if (uri.contains("/test")) {
                 handlerTest(fullRequest, ctx);
             }
