@@ -28,20 +28,6 @@ public class BackendServer {
         }
     }
 
-//    public static void main(String[] args) throws IOException {
-//        ExecutorService executorService = Executors.newFixedThreadPool(
-//                Runtime.getRuntime().availableProcessors() * 4);
-//        System.out.println(Runtime.getRuntime().availableProcessors());
-//        final ServerSocket serverSocket = new ServerSocket(8808);
-//        while (true) {
-//            try {
-//                final Socket socket = serverSocket.accept();
-//                executorService.execute(() -> service(socket));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
     private void service(Socket socket) {
         try {

@@ -33,7 +33,6 @@ class Week03ApplicationTests {
         thread.start();
         System.out.println("The Back-end Server is Ready ...");
         System.out.println("--------------------------------");
-        System.out.println();
 
         String proxyPort = System.getProperty("proxyPort","8888");
 

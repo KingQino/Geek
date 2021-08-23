@@ -3,6 +3,7 @@ package io.github.kingqino.week03.inbound;
 import io.github.kingqino.week03.filter.HeaderHttpRequestFilter;
 import io.github.kingqino.week03.filter.HttpRequestFilter;
 import io.github.kingqino.week03.outbound.httpclient4.HttpOutboundHandler;
+import io.github.kingqino.week03.outbound.okhttp.OkHttpOutboundHandler;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,6 +14,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.log4j.Log4j2;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -28,6 +31,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
     private List<String> proxyServer;
     private HttpOutboundHandler handler;
+//    private OkHttpOutboundHandler handler;
     private HttpRequestFilter filter = new HeaderHttpRequestFilter();
 
     public HttpInboundHandler(List<String> proxyServer) {
@@ -47,9 +51,12 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
             String uri = fullRequest.uri();
 
             if (uri.contains("/backend")) {
+                System.out.println("开始请求backend服务");
                 handler.handle(fullRequest, ctx, filter);
+                return;
             }
 
+            System.out.println("其他请求，门户服务器直接响应");
             handlerTest(fullRequest, ctx);
 
         } catch(Exception e) {
