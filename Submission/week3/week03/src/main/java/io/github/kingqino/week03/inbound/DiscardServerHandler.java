@@ -1,5 +1,7 @@
 package io.github.kingqino.week03.inbound;
 
+import io.github.kingqino.week03.filter.HeaderHttpRequestFilter;
+import io.github.kingqino.week03.filter.HttpRequestFilter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -9,6 +11,8 @@ import io.netty.util.ReferenceCountUtil;
  * Handles a server-side channel.
  */
 public class DiscardServerHandler extends ChannelInboundHandlerAdapter {
+
+    private HttpRequestFilter filter = new HeaderHttpRequestFilter();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {

@@ -12,8 +12,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.ReferenceCountUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -25,10 +24,9 @@ import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 
-//@Log4j2
+@Log4j2
 public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(HttpInboundHandler.class);
-    private final List<String> proxyServer;
+    private List<String> proxyServer;
     private HttpOutboundHandler handler;
     private HttpRequestFilter filter = new HeaderHttpRequestFilter();
 
@@ -45,15 +43,14 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-            //logger.info("channelRead流量接口请求开始，时间为{}", startTime);
             FullHttpRequest fullRequest = (FullHttpRequest) msg;
             String uri = fullRequest.uri();
-//            //logger.info("接收到的请求url为{}", uri);
-            if (uri.contains("/test")) {
-                handlerTest(fullRequest, ctx);
+
+            if (uri.contains("/backend")) {
+                handler.handle(fullRequest, ctx, filter);
             }
 
-            handler.handle(fullRequest, ctx, filter);
+            handlerTest(fullRequest, ctx);
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -62,22 +59,29 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    /**
+     * 一些简单请求，门户服务器直接响应请求
+     *
+     * @param fullRequest HTTP请求
+     * @param ctx ChannelHandlerContext
+     */
     private void handlerTest(FullHttpRequest fullRequest, ChannelHandlerContext ctx) {
         FullHttpResponse response = null;
         try {
-            String value = "hello,kimmking";
+            String value = "hello, this is gateway server providing basic services.";
             response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(value.getBytes(StandardCharsets.UTF_8)));
             response.headers().set("Content-Type", "application/json");
             response.headers().setInt("Content-Length", response.content().readableBytes());
 
         } catch (Exception e) {
-            logger.error("处理测试接口出错", e);
+            log.error("处置接口错误" + e.getMessage());
             response = new DefaultFullHttpResponse(HTTP_1_1, NO_CONTENT);
         } finally {
             if (fullRequest != null) {
                 if (!HttpUtil.isKeepAlive(fullRequest)) {
                     ctx.write(response).addListener(ChannelFutureListener.CLOSE);
                 } else {
+                    assert response != null;
                     response.headers().set(CONNECTION, KEEP_ALIVE);
                     ctx.write(response);
                 }

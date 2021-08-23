@@ -4,14 +4,11 @@ import io.github.kingqino.week03.filter.HeaderHttpResponseFilter;
 import io.github.kingqino.week03.filter.HttpRequestFilter;
 import io.github.kingqino.week03.filter.HttpResponseFilter;
 import io.github.kingqino.week03.router.HttpEndpointRouter;
-import io.github.kingqino.week03.router.RandomHttpEndpointRouter;
+import io.github.kingqino.week03.router.TargetHttpEndpointRouter;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.codec.http.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.concurrent.FutureCallback;
@@ -21,6 +18,7 @@ import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -35,11 +33,11 @@ public class HttpOutboundHandler {
     private List<String> backendUrls;
 
     HttpResponseFilter filter = new HeaderHttpResponseFilter();
-    HttpEndpointRouter router = new RandomHttpEndpointRouter();
+    HttpEndpointRouter router = new TargetHttpEndpointRouter();
 
     public HttpOutboundHandler(List<String> backends) {
 
-        this.backendUrls = backends.stream().map(this::formatUrl).collect(Collectors.toList());
+        this.backendUrls = backends.stream().map(this::formalUrl).collect(Collectors.toList());
 
         int cores = Runtime.getRuntime().availableProcessors();
         long keepAliveTime = 1000;
@@ -64,7 +62,7 @@ public class HttpOutboundHandler {
         httpclient.start();
     }
 
-    private String formatUrl(String backend) {
+    private String formalUrl(String backend) {
         return backend.endsWith("/") ? backend.substring(0,backend.length()-1) : backend;
     }
 
@@ -72,14 +70,20 @@ public class HttpOutboundHandler {
         String backendUrl = router.route(this.backendUrls);
         final String url = backendUrl + fullRequest.uri();
         filter.filter(fullRequest, ctx);
+        System.out.println(fullRequest);
+        System.out.println(url);
         proxyService.submit(()->fetchGet(fullRequest, ctx, url));
     }
 
     private void fetchGet(final FullHttpRequest inbound, final ChannelHandlerContext ctx, final String url) {
         final HttpGet httpGet = new HttpGet(url);
-        //httpGet.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_CLOSE);
         httpGet.setHeader(HTTP.CONN_DIRECTIVE, HTTP.CONN_KEEP_ALIVE);
-        httpGet.setHeader("mao", inbound.headers().get("mao"));
+        httpGet.setHeader("MAuth", inbound.headers().get("MAuth"));
+        System.out.println("AAAAAAAAAAAAAAAAAA");
+        System.out.println(httpGet);
+        System.out.println(Arrays.toString(httpGet.getAllHeaders()));
+        System.out.println("AAAAAAAAAAAAAAAA");
+
 
         httpclient.execute(httpGet, new FutureCallback<HttpResponse>() {
             @Override

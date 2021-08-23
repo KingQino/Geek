@@ -15,7 +15,7 @@ public class HttpInboundInitializer extends ChannelInitializer<SocketChannel> {
     private final List<String> proxyServer;
 
     @Override
-    protected void initChannel(SocketChannel ch) throws Exception {
+    protected void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
 
         p.addLast(new HttpServerCodec());
