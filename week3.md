@@ -216,6 +216,8 @@
 
 * Thread状态
 
+  _
+  
   ![Thread状态](pictures/25.png)
 
 
@@ -508,7 +510,6 @@
         System.out.println("result2=" + result2);
     }
     ```
-
 
 
 
