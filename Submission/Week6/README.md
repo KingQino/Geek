@@ -42,7 +42,7 @@
     * Primary Key：id
 
 
-  
+
 
   * 建库建表语句 - `initialize.sql`
 
@@ -78,7 +78,9 @@
         `number` int(8) UNSIGNED NOT NULL COMMENT '数量',
         `total_price` decimal(10,2) DEFAULT NULL COMMENT '总价',
         `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-        PRIMARY KEY (`id`)
+        PRIMARY KEY (`id`),
+        FOREIGN KEY (`user_id`) REFERENCES user(id),
+        FOREIGN KEY (`product_id`) REFERENCES product(id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
     ```
 
