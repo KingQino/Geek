@@ -4,7 +4,7 @@
 
   _
 
-  ![Spring变得越来越复杂](pictures/61.png)
+  <img src="pictures/61.png" alt="Spring变得越来越复杂" style="zoom:67%;" />
 
 * Spring Boot的出发点
 
@@ -22,12 +22,11 @@
 
 * Spring Boot 如何做到简化
 
-  为什么能做到简化：
-
-  1. Spring 本身技术的成熟与完善，各方面第三方组件的成熟集成
-  2. Spring 团队在去 web 容器化等方面的努力
-  3. 基于 MAVEN 与 POM 的 Java 生态体系，整合 POM 模板成为可能
-  4. 避免大量 maven 导入和各种版本冲突
+  * 为什么能做到简化：
+    1. Spring 本身技术的成熟与完善，各方面第三方组件的成熟集成
+    2. Spring 团队在去 web 容器化等方面的努力
+    3. 基于 MAVEN 与 POM 的 Java 生态体系，整合 POM 模板成为可能
+    4. 避免大量 maven 导入和各种版本冲突
 
   Spring Boot 是 Spring 的一套快速配置脚手架，关注于自动配置，配置驱动。
 
@@ -58,7 +57,7 @@
 
   _
 
-  ![Spring Boot两大核心原理](pictures/62.png)
+  <img src="pictures/62.png" alt="Spring Boot两大核心原理" style="zoom:67%;" />
 
 * 为什么要约定大于配置
 
@@ -78,7 +77,7 @@
 
   _
 
-  ![自动化配置原理](pictures/63.png)
+  <img src="pictures/63.png" alt="自动化配置原理" style="zoom:67%;" />
 
 * Spring Boot 自动配置注解
 
@@ -126,7 +125,7 @@
 
   _
 
-  ![JDBC](pictures/64.png)
+  <img src="pictures/64.png" alt="JDBC" style="zoom:67%;" />
 
 * JDBC是Java里操作数据库的核心
 
@@ -154,7 +153,7 @@
 
   _
 
-  ![Hibernate](pictures/65.png)
+  <img src="pictures/65.png" alt="Hibernate" style="zoom:67%;" />
 
 * MyBatis
 
@@ -162,7 +161,7 @@
 
   _
 
-  ![MyBatis](pictures/66.png)
+  <img src="pictures/66.png" alt="MyBatis" style="zoom:67%;" />
 
 * MyBatis - 半自动化 ORM
 
@@ -197,17 +196,17 @@
 
   _
 
-  ![JPA](pictures/67.png)
+  <img src="pictures/67.png" alt="JPA" style="zoom:67%;" />
 
 * Spring JDBC 与 ORM
 
-  ![Spring JDBC 与 ORM](pictures/68.png)
+  <img src="pictures/68.png" alt="Spring JDBC 与 ORM" style="zoom:67%;" />
 
 * Spring 管理事务
 
   _
 
-  ![Spring管理事务](pictures/69.png)
+  <img src="pictures/69.png" alt="Spring管理事务" style="zoom:67%;" />
 
   * JDBC 层，数据库访问层，怎么操作事务？编程式事务管理
   * Spring 怎么做到无侵入实现事务？声明式事务管理：事务管理器 + AOP

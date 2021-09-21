@@ -12,7 +12,7 @@
 
   _
 
-  ![Spring技术发展](pictures/47.png)
+  <img src="pictures/47.png" alt="Spring技术发展" style="zoom:70%;" />
 
   
 
@@ -30,13 +30,13 @@
 
   _
 
-  ![Spring framework6大模块](pictures/48.png)
+  <img src="pictures/48.png" alt="Spring framework6大模块" style="zoom:70%;" />
 
 * 引入 Spring 意味着引入了一种研发协作模式
 
   _
 
-  ![Spring框架设计](pictures/49.png)
+  <img src="pictures/49.png" alt="Spring框架设计" style="zoom:67%;" />
 
 
 
@@ -56,7 +56,7 @@
 
   _
 
-  ![AOP](pictures/50.png)
+  <img src="pictures/50.png" alt="AOP" style="zoom:67%;" />
 
 
 
@@ -68,11 +68,11 @@
 
   _
 
-  ![Bean的加载过程](pictures/51.png)
+  <img src="pictures/51.png" alt="Bean的加载过程" style="zoom:67%;" />
 
-  ![Bean的加载过程](pictures/52.png)
+  <img src="pictures/52.png" alt="Bean的加载过程" style="zoom:67%;" />
 
-  ![Bean的加载过程](pictures/53.png)
+  <img src="pictures/53.png" alt="Bean的加载过程" style="zoom:67%;" />
 
 * Bean的加载过程演示
 
@@ -83,7 +83,7 @@
 
   _
 
-  ![Bean的加载过程演示](pictures/54.png)
+  <img src="pictures/54.png" alt="Bean的加载过程演示" style="zoom:67%;" />
 
   * 检查Aware装配
   * 前置处理、After处理
@@ -94,11 +94,11 @@
 
   _
 
-  ![Bean的加载过程演示](pictures/55.png)
+  <img src="pictures/55.png" alt="Bean的加载过程演示" style="zoom:67%;" />
 
   _
 
-  ![Bean的加载过程](pictures/56.png)
+  <img src="pictures/56.png" alt="Bean的加载过程" style="zoom:67%;" />
 
 
 
@@ -108,7 +108,7 @@
 
   _
 
-  ![XML配置原理](pictures/57.png)
+  <img src="pictures/57.png" alt="XML配置原理" style="zoom:67%;" />
 
 * 自动化XML配置工具：XmlBeans -> Spring-xbean
 
@@ -126,7 +126,7 @@
 
   _
 
-  ![Spring Bean 配置方式演化](pictures/58.png)
+  <img src="pictures/58.png" alt="Spring Bean 配置方式演化" style="zoom:67%;" />
 
   
 
@@ -136,11 +136,11 @@
 
   _
 
-  ![Message_01](pictures/59.png)
+  <img src="pictures/59.png" alt="Message_01" style="zoom:67%;" />
 
   _
 
-  ![Message_02](pictures/60.png)
+  <img src="pictures/60.png" alt="Message_02" style="zoom:67%;" />
 
   
 

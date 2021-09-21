@@ -10,9 +10,9 @@
     </parent>
 
     <groupId>io.github.kingqino</groupId>
-    <artifactId>week03</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>week03</name>
+    <artifactId>gateway-server</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>gateway-server</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -116,6 +116,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.5.4</version>
             </plugin>
         </plugins>
     </build>
