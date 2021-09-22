@@ -24,6 +24,7 @@
 
     1. PreparedStatement 和 Statement 比较
 
+       - [x] 单线程
        - [x] 表中有索引 - 主键
 
        | 方法              | 耗时  | 插入数据量 |
@@ -35,6 +36,7 @@
 
     2. Add Batch 与 不使用Add Batch
 
+       - [x] 单线程
        - [x] 表中有索引 - 主键
        - [x] 使用 PreparedStatement
 
@@ -45,8 +47,70 @@
 
        * 使用Add Batch显著提升效率
 
-    3. A
+    3. 有索引与没有索引
 
-  * A
+       - [x] 单线程
+       - [x] 使用PreparedStatement
+       - [x] 使用Add Batch
+
+       * 无索引，建表如下：
+
+         ```sql
+         DROP TABLE `order_x`;
+         CREATE TABLE IF NOT EXISTS `order_x` (
+             `user_id` bigint(11) NOT NULL COMMENT '用户ID',
+             `product_id` bigint(11)NOT NULL COMMENT '商品ID'
+         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+         ```
+
+         ```sql
+         # 插入数据后，为表添加自增主键
+         ALTER TABLE `order_x` ADD id bigint(11) not null AUTO_INCREMENT PRIMARY KEY COMMENT '订单ID' FIRST; 
+         ```
+
+       | 方法   | 耗时   | 插入数据量 |
+       | ------ | ------ | ---------- |
+       | 有索引 | 1805ms | 100_000    |
+       | 无索引 | 1804ms | 100_000    |
+
+       * 在该实验环境背景下，有无索引对写入效率并没有显著影响
+
+    4. Hikari 和 JDBC
+
+       - [x] 单线程
+       - [x] 表中有索引 - 主键
+       - [x] 使用PreparedStatement
+       - [x] 使用Add Batch
+
+       | 方法   | 耗时   | 插入数据量 |
+       | ------ | ------ | ---------- |
+       | JDBC   | 1805ms | 100_000    |
+       | Hikari | 1277ms | 100_000    |
+
+       * 在数据量较少的情况下Hikari的写入效率提升明显
+
+  * 尝试以效率最高的方式插入数据一百万条
+
+    1. 方案A - 插入数据
+
+       - [x] 多线程 - 固定线程池和CountDownLatch
+       - [x] Hikari
+       - [x] 使用PreparedStatement和Add Batch
+       - [x] 表有索引
+
+       * 耗时：9414毫秒，即9秒
+
+    2. 方案B - LoadData
+
+       ```sql
+       LOAD DATA LOCAL INFILE '/tmp/initData.txt' INTO TABLE `order` 
+       CHARACTER SET utf8mb4
+       FIELDS TERMINATED BY '\t'
+              LINES TERMINATED BY '\n'
+              (`user_id`,`product_id`); 
+       ```
+
+       * 很快
 
 * A
+
