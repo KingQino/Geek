@@ -2,7 +2,7 @@
 
 
 
-> 工欲善其事，必先利其器！ 学会使用工具可以帮助我们变得优秀。
+> 工欲善其事，必先利其器！ 学会使用工具可以提升工作效率。
 
 
 
@@ -234,13 +234,302 @@
 
 
 
+## 2. DB 与 SQL 优化
+
+* 从一个简单例子讲起
+
+  -
+
+  <img src="pictures/86.png" alt="从一个简单例子讲起" style="zoom:100%;" />
+
+  ```sql
+  SELECT f_id, f_username, f_gender, f_idno, f_age, f_created_at, f_updated_at
+  FROM dbsql.t_user_info
+  WHERE f_id < 10
+  ORDER BY IF(f_id < 5, -f_id, f_id);
+  ```
+
+* 说说 SQL 优化
+
+  * 如何发现需要优化的 SQL？
+  * 你了解的 SQL 优化方法有哪些？
+  * SQL 优化有哪些好处？
+
+* 模拟一个需求：
+
+  * 虚拟业务组：
+
+    * 业务分析人员: Tony
+    * 开发攻城狮: Micheal
+    * 著名DBA: Tijana
+    * 此三人是某项目组的核心人员，承接了一个大型系统中某些模块的设计开发工作
+
+  * 需求-1
+
+    * 增加可以保存用户信息的数据表，必要的用户信息包含:
+
+      > 表名:user_info
+      >
+      > 用户名 username 
+      > 密码 password
+      > 姓名 name
+      > 性别 gender 
+      > 身份证号 id_number
+      > 年龄 age
+      > 状态 state
+
+      * 数据类型是否越大越好？
+
+        -
+
+        <img src="pictures/87.png" alt="数据类型是否越大越好" style="zoom:100%;" />
+
+      * 存储引擎的选择
+
+        | InnoDB                                                 | ToKuDB                                                       |
+        | ------------------------------------------------------ | ------------------------------------------------------------ |
+        | 1. 聚焦索引<br/>2. 锁粒度是行锁<br/>3. InnoDB 支持事务 | 1. 高压缩比，尤其适用于压缩和归档(1:12) <br/>2. 在线添加索引，不影响读写操作<br/>3. 支持完整的 ACID 特性和事务机制 |
+        | 没有其他特别因素就用 InnoDB                            | 归档库                                                       |
+
+      * 设计的规范
+
+        -
+
+        <img src="pictures/88.png" alt="表设计1" style="zoom:100%;" />
+
+        * 设计表之前，通读 DBA 的指导手册/dbaprinciples
+
+  * 需求-2
+
+    >1.根据身份证号查询用户详细信息
+    >
+    >2.根据用户名密码登陆
+    >
+    >3.统计当日新增用户个数
+
+    -
+
+    <img src="pictures/89.png" alt="表设计2" style="zoom:80%;" />
+
+    * 小心隐式转换
+      * 简单的 SQL 可能带来大的问题，where 条件中注意数据类型，避免类型转换
+
+  * 需求-3
+
+    > 系统经过一个月的运行，用户表增长约100万，DBA 接到告警， CPU 升高，查询越来越慢，请定位问题并给出解决方案。
+
+    * 定位问题的方法：
+
+      - 慢查询日志
+
+        -
+
+        <img src="pictures/90.png" alt="慢查询日志" style="zoom:100%;" />
+
+      - 看应用和运维的监控
+
+        -
+
+        <img src="pictures/91.png" alt="Zabbix" style="zoom:80%;" />
+
+        -
+
+        <img src="pictures/92.png" alt="orzdba" style="zoom:80%;" />
+
+    * 解决方案 
+
+      * 通过查询日志吗，发现慢查询的SQL
+
+      * 增加索引
+
+        ```sql
+        alter table table_name add index index_name(column_list);
+        ```
+
+      * 索引类型
+
+        * Hash
+        * B Tree/ B+ Tree
+
+* 一些思考
+
+  * 为什么主键要单调递增？
+    * 避免过多的结点分裂
+
+      -
+
+      <img src="pictures/93.png" alt="页分裂" style="zoom:80%;" />
+
+  * 索引思考题
+
+    * 为什么不适用 hash index
+    * 为什么 b+tree 更适合做索引
+    * 为什么主键长度不能过大
+
+  * 谁快？ 为什么？
+
+    > select * from t_user_info where f_id = XXX  // f_id:primary key
+    >
+    > select * from t_user_info where f_username=’XXX’  // f_username:index
+
+    -
+
+    <img src="pictures/94.png" alt="谁快" style="zoom:80%;" />
+
+  * 字段选择性-最左原则
+
+    * 某个字段其值的重复程度，称为该字段的选择性
+    * F = DISTINCT(col)/count(*)
+
+    -
+
+    <img src="pictures/95.png" alt="字段选择性" style="zoom:100%;" />
+
+  * 索引冗余
+
+    > (username, name, age) : (username)、 (username, name)
+    >
+    > (username, name) : (username)、 (name, username)、 (name)
+    >
+    > (username): (username，id)
+
+    * 长的包括短的，形成冗余
+    * 有唯一约束的，组合冗余
+
+  * 修改表结构的危害
+
+    1. 索引重建
+    2. 锁表
+    3. 抢占资源
+    4. 主从延时
+
+  * 数据量
+
+    1. 业务初期考虑不周，字段类型使用不合理，需要变更数据类型
+    2. 随着业务的发展，需要增加新的字段
+    3. 在无索引字段增加新的业务查询，需要增加索引
+
+* 经验总结
+
+  1. 写入优化
+     * 大批量写入的优化
+     * PreparedStatement 减少 SQL 解析
+     * Multiple Values/Add Batch 减少交互
+     * Load Data，直接导入
+     * 索引和约束问题
+  2. 数据更新
+     * 数据的范围更新
+     * 注意 GAP Lock 的问题
+     * 导致锁范围扩大
+  3. 模糊查询
+     * Like 的问题
+     * 前缀匹配
+     * 否则不走索引
+     * 全文检索
+     * solr/ES
+  4. 连接查询
+     * 连接查询优化
+     * 驱动表的选择问题
+     * 避免笛卡尔积
+  5. 索引失效
+     * 索引失效的情况汇总
+     * NULL，not，not in，函数等
+     * 减少使用 or，可以用 union(注意 union all 的区别)，以及前面提到的 like
+     * 大数据量下，放弃所有条件组合都走索引的幻想，出门左拐“全文检索”
+     * 必要时可以使用 force index 来强制查询走某个索引
+  6. 查询 SQL 到底怎么设计？
+     * 查询数据量和查询次数的平衡
+     * 避免不必须的大量重复数据传输
+     * 避免使用临时文件排序或临时表
+     * 分析类需求，可以用汇总表
+
+## 3. 常见场景分析
+
+* 怎么实现主键 ID
+
+  - 自增
+  - sequence
+  - 模拟 seq
+  - UUID
+  - 时间戳/随机数
+  - snowflake
+
+* 高效分页
+
+  - 分页:count/pageSize/pageNum, 带条件的查询语句
+  - 常见实现-分页插件:使用查询 SQL，嵌套一个 count，性能的坑?
+  - 改进一下1，重写 count
+  - 大数量级分页的问题，limit 100000,20
+  - 改进一下2，反序
+  - 继续改进3，技术向:带 id
+  - 继续改进4，需求向:非精确分页
+  - 所有条件组合? 索引?
+
+* 乐观锁与悲观锁
+
+  ```sql
+  select * from xxx for update;
+  update xxx;
+  commit;
+  ```
+
+  * 意味着什么？
+
+  ```sql
+  select * from xxx;
+  update xxx where value=oldValue;
+  ```
+
+  * 为什么叫乐观锁
 
 
 
+# 0x07-02 超越分库分表-高可用与读写分离
 
 
 
+## 1. 从单机到集群
 
+* 单机 MySQL 数据库的几个问题
+
+  * 随着数据量的增大，读写并发的增加，系统可用性要求的提升，单机 MySQL 面临:
+    1. 容量有限，难以扩容
+    2. 读写压力，QPS 过大，特别是分析类需求会影响到业务事务
+    3. 可用性不足，宕机问题
+
+* 单机 MySQL 的技术演进
+
+  -
+
+  <img src="pictures/96.png" alt="单机 MySQL 的技术演进" style="zoom:100%;" />
+
+
+
+## 2. MySQL 主从复制<sup>*</sup>
+
+* 主从复制原理 - 核心
+
+  * 核心：
+
+    1. 主库写 binlog
+    2. 从库 relay log
+
+    -
+
+    <img src="pictures/97.png" alt="核心" style="zoom:100%;" />
+
+  * 背景：
+
+    * 2000年，MySQL 3.23.15版本引入了复制
+    * 2002年，MySQL 4.0.2版本分离 IO 和 SQL 线程，引入了 relay log
+    * 2010年，MySQL 5.5版本引入半同步复制
+    * 2016年，MySQL 在5.7.17中引入 InnoDB Group Replication
+
+* 
+
+
+
+## 3. MySQL 读写分离<sup>*</sup>
 
 
 

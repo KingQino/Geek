@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    dynamic:
+      hikari:
+        connection-timeout: 5000
+        leak-detection-threshold: 5000
+        max-lifetime: 30000
+      primary: master #设置默认的数据源或者数据源组,默认值即为master
+      strict: true #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常, false使用默认数据源
+      datasource:
+        master:
+          url: jdbc:mysql://10.182.8.226:3316/db
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        slave_1:
+          url: jdbc:mysql://10.182.8.226:3326/db
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        slave_2:
+          url: jdbc:mysql://10.182.8.227:3336/db
+          username: root
+          password: root
+          driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  type-aliases-package: io.github.kingqino.week07.assignment9
