@@ -22,6 +22,7 @@ public class YamlTest {
     @Test
     void select() {
         // 配不合适，好像是官方的Bug
+        // 9月29日 果然配不合适，照着sharding-proxy里面的config-replica-query.yaml配置文件配置的
         DataSource dataSource = yamlDatasourceConfig.generateDatasource();
 
         String sql = "SELECT * FROM `order` WHERE id = ?";

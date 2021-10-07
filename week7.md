@@ -525,21 +525,234 @@
     * 2010年，MySQL 5.5版本引入半同步复制
     * 2016年，MySQL 在5.7.17中引入 InnoDB Group Replication
 
-* 
+* binlog 格式
 
+  * ROW
+  * Statement
+  * Mixed
 
+  -
+
+  <img src="pictures/98.png" alt="binlog" style="zoom:100%;" />
+
+* 主从复制原理
+
+  * 异步复制：传统主从复制--2000年，MySQL 3.23.15版本引入了 Replication
+
+    <img src="pictures/99.png" alt="异步复制" style="zoom:80%;" />
+
+  * 半同步复制：需要启用插件
+
+    <img src="pictures/100.png" alt="半同步复制" style="zoom:100%;" />
+
+  * 组复制：
+
+    <img src="pictures/101.png" alt="组复制" style="zoom:100%;" />
+
+* 主从复制演示
+
+  1. 本地启动两个 MySQL
+  2. 注意配置文件（思考几种安装、启动方式）
+  3. 演示数据复制操作，创建表和写入、修改数据
+
+  * [主从复制演示](https://github.com/KingQino/Geek/blob/main/Submission/Week7/%E8%B5%84%E6%BA%90%E5%87%86%E5%A4%87.md)
+
+* 主从复制的局限性
+
+  1. 主从延迟问题
+  2. 应用侧需要配合读写分离框架
+  3. 不解决搞可用问题
 
 ## 3. MySQL 读写分离<sup>*</sup>
 
+* 主从复制在业务系统里的应用
 
+  - 借助于主从复制，我们现在有了多个 MySQL 服务器示例
 
+  - 如何借助这个新的集群，改进我们的业务系统数据处理能力？
 
+    ==》 配置多个数据源，实现读写分离
 
+* 读写分离 - 动态切换数据源版本 1.0
 
+  1. 基于 Spring/Spring Boot，配置多个数据源(例如2个，master 和 slave)
 
+  2. 根据具体的 Service 方法是否会操作数据，注入不同的数据源，1.0版本
 
+  3. 改进一下1.1: 基于操作 AbstractRoutingDataSource 和自定义注解 readOnly 之类的，简化自动切换数据源
 
+  4. 改进二下1.2:支持配置多个从库
 
+  5. 改进三下1.3:支持多个从库的负载均衡
+
+     [演示代码](https://github.com/KingQino/Geek/tree/main/Submission/Week7/week07/src/main/java/io/github/kingqino/week07/assignment9)
+
+     -
+
+     <img src="pictures/102.png" alt="读写分离 1.0" style="zoom:80%;" />
+
+* 读写分离 - 动态切换数据源版本 2.0
+
+  1. 分析前一版本“动态切换数据源”有什么问题?
+
+     - 侵入性还是较强
+     - 降低侵入性会导致”写完读”不一致问题
+
+  2. 改进方式，ShardingSphere-jdbc的Master-Slave 功能
+
+     * SQL 解析和事务管理，自动实现读写分离
+     * 解决”写完读”不一致的问题
+
+     [演示代码](https://github.com/KingQino/Geek/tree/main/Submission/Week7/week07/src/main/java/io/github/kingqino/week07/assignment10)
+
+     -
+
+     <img src="pictures/103.png" alt="读写分离 2.0" style="zoom:100%;" />
+
+* 读写分离 - 动态切换数据源版本 3.0
+
+  1. 分析前一版本“框架版本”有什么问题?
+     * 对业务系统还是有侵入
+     * 对已存在的旧系统改造不友好
+  2. 改进方式，MyCat/ShardingSphere-Proxy 的 Master-Slave 功能
+     * 需要部署一个中间件，规则配置在中间件
+     * 模拟一个 MySQL 服务器，对业务系统无侵入
+
+## 4. MySQL 高可用
+
+* 为什么要高可用？
+
+  * 读写分离，提升读的处理能力
+  * 故障转移，提供 failover 能力
+
+  * 加上业务侧连接池的心跳重试，实现断线重连，业务不间断，降低 RTO 和 RPO。
+  * 注释：
+    - Recovery Time Objective (RTO) ，指的是从灾难发生到整个系统恢复正常所需要的最大时长。
+    - Recovery Point Objective (RPO)，指的是最多可能丢失的数据的时长。
+  * 什么是 failover，故障转移，灾难恢复
+    * 容灾:热备与冷备
+    * 对于主从来说，简单讲就是主挂了，某一个从，变成主，整个集群来看，正常对外提供服务
+  * 常见的一些策略：
+    1. 多个实例不在一个主机/机架上
+    2. 跨机房和可用区部署
+    3. 两地三中心容灾高可用方案
+
+* 高可用定义
+
+  * 高可用意味着，更少的不可服务时间。一般用 SLA/SLO 衡量。
+
+  * 注释：
+
+    * Service Level Indicator (SLI): a metric and its target values (range) over a period of time
+    * Service Level Objective (SLO): all SLIs representing the SLA objective
+    * Service Level Agreement (SLA): legal agreement about SLO (e.g., how it is measured, notifications, service credits, etc.)
+
+  * 比如提供的服务一年中允许中断停机的时常
+
+    - 1年 = 365天 = 8760小时
+    - 99 = 8760 * 1% = 8760 * 0.01 = 87.6小时
+    - 99.9 = 8760 * 0.1% = 8760 * 0.001 = 8.76小时
+    - 99.99 = 8760 * 0.0001 = 0.876小时 = 0.876 * 60 = 52.6分钟
+    - 99.999 = 8760 * 0.00001 = 0.0876小时 = 0.0876 * 60 = 5.26分钟
+
+  * 后面的分布式课程讲稳定性，注意关系和区别。
+
+    > 你维护的系统有几个9?99.95%算是几个9?
+
+* MySQL 高可用0: 主从手动切换
+
+  * 如果主节点挂掉，将某个从改成主
+
+  * 重新配置其他从节点
+
+  * 修改应用数据源配置
+
+    ==》有什么问题？
+
+    1. 可能数据不一致
+    2. 需要人工干预
+    3. 代码和配置的侵入性
+
+* MySQL 高可用1: 主从手动切换
+
+  * 用 LVS+Keepalived 实现多个节点的探活+请求路由。
+
+  * 配置 VIP 或 DNS 实现配置不变更。
+
+    ==》有什么问题？
+
+    1. 手动处理主从切换
+    2. 大量的配置和脚本定义
+
+* MySQL 高可用2: MHA
+
+  * MHA(Master High Availability)目前在 MySQL 高可用方面是一个相对成熟的解决方案，它由 日本 DeNA 公司的 youshimaton(现就职于 Facebook 公司)开发，是一套优秀的作为 MySQL 高可用性环境下故障切换和主从提升的高可用软件。
+
+  * 基于 Perl 语言开发，一般能在30s内实现主从切换。 切换时，直接通过 SSH 复制主节点的日志。
+
+    ==》有什么问题？
+
+    1. 需要配置 SSH 信息
+    2. 至少三台
+
+    -
+
+    <img src="pictures/104.png" alt="高可用2 MHA" style="zoom:100%;" />
+
+* MySQL 高可用3: MGR<sup>*</sup>
+
+  * 如果主节点挂掉，将自动选择某个从改成主; 
+
+  * 无需人工干预，基于组复制，保证数据一致性
+
+    ==》 有什么问题？
+
+    1. 外部获得状态变更需要读取数据库
+    2. 外部需要使用 LVS/VIP 配置
+
+    -
+
+    <img src="pictures/105.png" alt="高可用3 MGR" style="zoom:100%;" />
+
+  * **MySQL Group Replication**( **MGR** )的特点：
+    * 高一致性:基于分布式 Paxos 协议实现组复制，保证数据一致性;
+    * 高容错性:自动检测机制，只要不是大多数节点都宕机就可以继续工作，内置防脑裂保护机制;
+    * 高扩展性:节点的增加与移除会自动更新组成员信息，新节点加入后，自动从其他时间节点同步增量数据，直到与其他数据一致;
+    * 高灵活性:提供单主模式和多主模式，单主模式在主库宕机后能够自动选主，所有写入都在主节点进行，多主模式支持多节点写入。
+
+* MySQL 高可用 4: MySQL Cluster
+
+  * 
+
+    <img src="pictures/106.png" alt="高可用4 MySQL Cluster" style="zoom:80%;" />
+
+  * **MySQL InnoDB Cluster**
+
+    * MySQL Shell是MySQL 团队打造的一个统一的客户端，它可以对MySQL 执行数据操作和管理。它支 持通过JavaScript，Python， SQL 对关系型数据模式和文档行数据模式进行操作。使用它可以轻松配置管理 InnoDB Cluster。
+    * MySQL Router 是一个轻量级的中间件，可以提供负载均衡和应用连接的故障转移。它是MySQL团队 为MGR量身打造的，通过使用Router 和Shell，用户可以利用MGR实现完整的数据库底层的解决方案。 如果您在使用MGR，请一定配合使用Router 和Shell，您可以理解为它们是为MGR而生的，会配合 MySQL的开发路线图发展的工具。
+
+  * MySQL 高可用5: Orchestrator
+
+    * 如果主节点挂掉，将某个从改成主;
+
+    * 一款 MySQL 高可用和复制拓扑管理工具，支持复制拓扑结构的调整，自动故障转移和手动主从切换等。 后段数据库 MySQL 或 SQLite 存储元数据，并提供 Web 界面展示 MySQL 复制的拓扑关系及状态， 通过 Web 可更改 MySQL 实例的复制关系和部分配置信息，同时也提供命令行和 API 接口，方便运维 管理。
+
+    * 特点
+
+      1. 自动发现 MySQL 的复制拓扑，并且在 Web 上展示;
+      2. 重构复制关系，可以在 Web 进行拖图来进行复制关系变更;
+      3. 检测主异常，并可以自动或手动恢复，通过 Hooks 进行自定义脚本;
+      4. 支持命令行和 Web 界面管理复制
+
+    * 基于 Go 语言开发，实现了中间件本身的高可用(?!)
+
+    * 优势: 能直接在 UI 界面拖拽改变主从关系
+
+      -
+
+      <img src="pictures/107.png" alt="高可用5 Orchestrator" style="zoom:80%;" />
+
+  
 
 
 
