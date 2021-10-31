@@ -1,17 +1,23 @@
 package io.github.kingqino.week03.backend;
 
+import io.github.kingqino.week03.inbound.HttpInboundServer;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 // 创建了一个固定大小的线程池处理请求
 @Component
-public class BackendServer {
+public class BackendServer implements CommandLineRunner {
+
+    public final static String GATEWAY_NAME = "NIOGateway";
+    public final static String GATEWAY_VERSION = "3.0.0";
 
     public void run() throws IOException {
         ExecutorService executorService = Executors.newFixedThreadPool(
@@ -45,4 +51,33 @@ public class BackendServer {
         }
     }
 
+    @Override
+    public void run(String... args) throws Exception {
+        Runnable runnable = () -> {
+            try {
+                run();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
+
+        Thread thread = new Thread(runnable);
+        thread.start();
+        System.out.println("The Back-end Server is Ready ...");
+        System.out.println("--------------------------------");
+
+        String proxyPort = System.getProperty("proxyPort","8888");
+
+        String backendServers = System.getProperty("proxyServers","http://localhost:8808");
+
+        int port = Integer.parseInt(proxyPort);
+        System.out.println(GATEWAY_NAME + " " + GATEWAY_VERSION +" Starting ...");
+        HttpInboundServer server = new HttpInboundServer(port, Arrays.asList(backendServers.split(",")));
+        System.out.println("The gateway server will be deployed at http://localhost:" + port + ", and the corresponding backend server is " + server);
+        try {
+            server.run();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
 }
