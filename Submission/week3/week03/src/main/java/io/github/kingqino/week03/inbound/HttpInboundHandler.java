@@ -77,9 +77,12 @@ public class HttpInboundHandler extends ChannelInboundHandlerAdapter {
         FullHttpResponse response = null;
         try {
             String value = "hello, this is gateway server providing basic services.";
+//            String value = "";
             response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(value.getBytes(StandardCharsets.UTF_8)));
             response.headers().set("Content-Type", "application/json");
             response.headers().setInt("Content-Length", response.content().readableBytes());
+            response.headers().set("Access-Control-Allow-Origin", "*");
+
 
         } catch (Exception e) {
             log.error("处置接口错误" + e.getMessage());
